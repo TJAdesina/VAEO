@@ -15,3 +15,5 @@ streamlit-mic-recorder>=0.0.4
 
 # --- Environment variable management ---
 python-dotenv>=1.0.0
+
+gunicorn
