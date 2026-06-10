@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # ─── Page config (must be first Streamlit call) ───────────────────────────────
 
 st.set_page_config(
-    page_title="🌱 VAEO — Agricultural Voice Assistant",
+    page_title="VAEO — Agricultural Voice Assistant",
     page_icon="🌱",
     layout="centered",
 )
