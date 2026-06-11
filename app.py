@@ -21,7 +21,6 @@ from streamlit_mic_recorder import mic_recorder
 from config import (
     ISO_TO_LANGUAGE,
     LANGUAGES,
-    UI_STRINGS,
     WELCOME_MESSAGES,
     HISTORY_LIMIT,
 )
@@ -38,19 +37,10 @@ logger = logging.getLogger(__name__)
 # ─── Page config (must be first Streamlit call) ───────────────────────────────
 
 st.set_page_config(
-    page_title="VAEO — Agricultural Voice Assistant",
+    page_title="🌱 VAEO — Agricultural Voice Assistant",
     page_icon="🌱",
     layout="centered",
 )
-
-# ─── Shorthand for current-language UI strings ────────────────────────────────
-
-def _t(key: str) -> str:
-    """Return the UI string for the active language, falling back to English."""
-    lang = st.session_state.get("language", "English")
-    return UI_STRINGS.get(lang, UI_STRINGS["English"]).get(
-        key, UI_STRINGS["English"][key]
-    )
 
 # ─── Session state initialisation ─────────────────────────────────────────────
 
@@ -225,7 +215,7 @@ def _handle_language_switch() -> None:
 
     ai_history = _get_ai_history()  # includes the trigger above
 
-    with st.spinner(_t("spinner_switching")):
+    with st.spinner(f"Switching to {current}…"):
         response_text = get_ai_response_plain(ai_history, current)
         try:
             wav = synthesize_speech_parallel(response_text, current)
@@ -372,17 +362,17 @@ def _handle_input(user_text: str) -> None:
             stream     = get_response_stream(ai_history, language)
             clean_text, advisory = _stream_response(stream)
         except Exception as exc:
-            st.error(f"{_t('err_response')}: {exc}")
+            st.error(f"⚠️ Response error: {exc}")
             logger.error("Stream error: %s", exc, exc_info=True)
             return
 
         # 4 ── Parallel sentence TTS ───────────────────────────────────────────
-        with st.spinner(_t("spinner_tts")):
+        with st.spinner("🔊 Generating voice…"):
             try:
                 wav_bytes = synthesize_speech_parallel(clean_text, language)
                 b64       = base64.b64encode(wav_bytes).decode()
             except Exception as exc:
-                st.warning(f"{_t('warn_voice_unavail')}: {exc}")
+                st.warning(f"⚠️ Voice unavailable: {exc}")
                 wav_bytes = None
 
         # 5 ── Autoplay ────────────────────────────────────────────────────────
@@ -420,15 +410,15 @@ _ensure_welcome()
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.header(_t("sidebar_header"))
+    st.header("⚙️ Settings")
 
     lang_names = list(LANGUAGES.keys())
     chosen = st.selectbox(
-        _t("sidebar_lang_label"),
+        "🌍 Language",
         options=lang_names,
         index=lang_names.index(st.session_state.language),
         format_func=lambda n: f"{LANGUAGES[n]['flag']} {n}",
-        help=_t("sidebar_lang_help"),
+        help="Changes STT transcription, TTS voice, and AI response language.",
     )
     if chosen != st.session_state.language:
         st.session_state.language = chosen
@@ -436,7 +426,7 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button(_t("sidebar_new_chat"), use_container_width=True):
+    if st.button("🗑️ New conversation", use_container_width=True):
         st.session_state.history   = []
         st.session_state.tts_queue = None
         st.rerun()
@@ -445,15 +435,15 @@ with st.sidebar:
     st.caption(
         f"**Mode:** {LANGUAGES[st.session_state.language]['flag']} "
         f"{st.session_state.language}  \n"
-        + _t("sidebar_caption")
+        "VAEO · Gemini 2.5 Flash-Lite · Spitch"
     )
 
 # ── Page title ────────────────────────────────────────────────────────────────
 
-st.title(_t("page_main_title"))
+st.title("🌱 Agricultural Voice Assistant")
 st.caption(
     f"{LANGUAGES[st.session_state.language]['flag']} **{st.session_state.language}** mode  •  "
-    + _t("page_subtitle")
+    "Type or speak your farming question."
 )
 
 # ── Conversation display ──────────────────────────────────────────────────────
@@ -466,43 +456,54 @@ if st.session_state.tts_queue:
     _autoplay_audio(st.session_state.tts_queue)
     st.session_state.tts_queue = None
 
-# ── Text input ────────────────────────────────────────────────────────────────
-
-text_input = st.chat_input(_t("chat_input_placeholder"))
-if text_input:
-    _handle_input(text_input)
-
-# ── Voice input ───────────────────────────────────────────────────────────────
-
-st.divider()
-st.subheader(_t("voice_section_header"))
-st.caption(_t("voice_section_caption"))
+# ── Mic button (sits between history and text input) ─────────────────────────
+# Placed here so it renders visually below the chat history and above the
+# chat_input footer, exactly where we want it.
+#
+# The white-rectangle bug was caused by mic_recorder returning the same audio
+# result on every rerun (including reruns triggered by new messages), which
+# made Streamlit re-process the recording and re-render the widget mid-cycle.
+# Fix: track the last processed audio ID in session state and ignore duplicates.
 
 audio_result = mic_recorder(
-    start_prompt=_t("voice_start"),
-    stop_prompt=_t("voice_stop"),
-    just_once=True,     # deduplicate: only fires once per new recording
+    start_prompt="🎤",
+    stop_prompt="⏹",
+    just_once=True,
     format="wav",
     key="voice_recorder",
 )
 
+# ── Text input (renders in Streamlit's fixed footer) ─────────────────────────
+
+text_input = st.chat_input("Type or speak your farming question…")
+if text_input:
+    _handle_input(text_input)
+
+# ── Handle voice input ────────────────────────────────────────────────────────
+# Guard against reprocessing: mic_recorder with just_once=True still returns
+# the same result dict on every rerun until the user records again. We use the
+# audio ID (incrementing int provided by the component) to process each
+# recording exactly once.
+
 if audio_result:
-    audio_bytes = audio_result["bytes"]
-    st.audio(audio_bytes, format="audio/wav")
+    audio_id = audio_result.get("id")
+    if audio_id != st.session_state.get("_last_audio_id"):
+        st.session_state["_last_audio_id"] = audio_id
+        audio_bytes = audio_result["bytes"]
 
-    with st.spinner(f"{_t('spinner_transcribing')}"):
-        try:
-            user_text = transcribe_audio(
-                audio_bytes=audio_bytes,
-                mime_type="audio/wav",
-                language_name=LANGUAGES[st.session_state.language]["gemini_lang"],
-            )
-        except RuntimeError as exc:
-            st.error(f"{_t('err_transcription')}: {exc}")
-            user_text = ""
+        with st.spinner(f"Transcribing {st.session_state.language} speech…"):
+            try:
+                user_text = transcribe_audio(
+                    audio_bytes=audio_bytes,
+                    mime_type="audio/wav",
+                    language_name=LANGUAGES[st.session_state.language]["gemini_lang"],
+                )
+            except RuntimeError as exc:
+                st.error(f"⚠️ Transcription failed: {exc}")
+                user_text = ""
 
-    if not user_text:
-        st.warning(_t("warn_inaudible"))
-    else:
-        st.info(f"{_t('info_transcribed')}: *{user_text}*")
-        _handle_input(user_text)
+        if not user_text:
+            st.warning("Could not understand the audio. Please speak clearly and try again.")
+        else:
+            st.info(f"📝 Transcribed Successfully")
+            _handle_input(user_text)
