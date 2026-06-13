@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: vaeo
+    runtime: python
+    plan: starter
+    buildCommand: |
+      curl -fsSL https://deb.nodesource.com/setup_20.x | bash - || true
+      apt-get install -y nodejs || true
+      bash ./build.sh
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SPITCH_API_KEY
+        sync: false

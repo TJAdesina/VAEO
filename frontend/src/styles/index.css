@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-cream text-soil font-body antialiased;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1, h2, h3, .font-display {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+button, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* min target size for accessibility */
+.tap {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+/* streaming caret */
+.caret::after {
+  content: "▍";
+  margin-left: 2px;
+  opacity: 0.6;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.scroll-fade {
+  mask-image: linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+}

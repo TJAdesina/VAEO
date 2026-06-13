@@ -1,0 +1,17 @@
+# VAEO — Virtual Agricultural Extension Officer
+# Python 3.10+
+
+# --- Core framework ---
+streamlit>=1.35.0
+
+# --- Gemini AI (STT + diagnostic brain) ---
+google-genai>=1.0.0
+
+# --- Spitch TTS ---
+spitch>=1.47.0
+
+# --- Voice recording widget for Streamlit ---
+streamlit-mic-recorder>=0.0.4
+
+# --- Environment variable management ---
+python-dotenv>=1.0.0
