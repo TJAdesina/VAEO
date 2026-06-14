@@ -33,7 +33,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Module-level singleton — initialised once on import (pre-warmed on startup).
-_client = Spitch(api_key=os.getenv("SPITCH_API_KEY_2"))
+_client = Spitch(api_key=os.getenv("SPITCH_API_KEY"))
 
 _MIN_CHUNK_CHARS = 15   # merge very short fragments with the next sentence
 _MAX_WORKERS     = 3    # parallel Spitch connections cap
