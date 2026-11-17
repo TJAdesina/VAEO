@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import VoiceButton from "./VoiceButton";
 import { transcribe } from "@/lib/api";
@@ -10,6 +10,7 @@ export default function InputBar({
   understandingLabel,
   onSend,
   language,
+  onHeightChange,
 }: {
   disabled: boolean;
   placeholder: string;
@@ -17,9 +18,23 @@ export default function InputBar({
   understandingLabel: string;
   onSend: (text: string) => void;
   language: string;
+  onHeightChange: (height: number) => void;
 }) {
   const [val, setVal] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+
+    const observer = new ResizeObserver(() => {
+      onHeightChange(bar.getBoundingClientRect().height);
+    });
+    observer.observe(bar);
+    onHeightChange(bar.getBoundingClientRect().height);
+    return () => observer.disconnect();
+  }, [onHeightChange]);
 
   const send = () => {
     const v = val.trim();
@@ -40,7 +55,10 @@ export default function InputBar({
   }
 
   return (
-    <div className="shrink-0 border-t border-cream-border bg-white pb-[env(safe-area-inset-bottom)]">
+    <div
+      ref={barRef}
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-cream-border bg-white pb-[env(safe-area-inset-bottom)]"
+    >
       {status && (
         <div className="mx-auto max-w-conv px-4 pt-2 text-xs text-sage-dark">{status}</div>
       )}

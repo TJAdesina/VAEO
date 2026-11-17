@@ -40,6 +40,7 @@ export default function Chat() {
   const [welcome, setWelcome] = useState("");
   const [showSheet, setShowSheet] = useState(false);
   const [pendingAudio, setPendingAudio] = useState<{ text: string } | null>(null);
+  const [inputBarHeight, setInputBarHeight] = useState(0);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -152,7 +153,10 @@ export default function Chat() {
         ref={scrollerRef}
         className="min-h-0 flex-1 overflow-y-auto scroll-fade"
       >
-        <div className="mx-auto max-w-conv px-4 py-6 pb-8">
+        <div
+          className="mx-auto max-w-conv px-4 py-6 pb-8"
+          style={inputBarHeight ? { paddingBottom: inputBarHeight + 24 } : undefined}
+        >
           {empty ? (
             <>
               <GreetingHero greeting={t.greeting} subtitle={welcome || t.page_subtitle} />
@@ -185,6 +189,7 @@ export default function Chat() {
         understandingLabel={t.understanding}
         onSend={handleSend}
         language={language}
+        onHeightChange={setInputBarHeight}
       />
 
       <AnimatePresence>
