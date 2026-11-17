@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import clsx from "clsx";
+import ReactMarkdown from "react-markdown";
 import AudioReplayPill from "./AudioReplayPill";
 
 export default function ChatBubble({
@@ -26,17 +27,17 @@ export default function ChatBubble({
           <span className="text-sm">👨🏾‍🌾</span>
         </div>
       )}
-      <div className={clsx("max-w-[78%] flex flex-col", isUser ? "items-end" : "items-start")}>
+      <div className={clsx("w-full min-w-0 max-w-[78%] flex flex-col", isUser ? "items-end" : "items-start")}>
         <div
           className={clsx(
-            "px-4 py-2.5 rounded-bubble text-[15px] leading-relaxed whitespace-pre-wrap break-words",
+            "min-w-0 max-w-full px-4 py-2.5 rounded-bubble text-[15px] leading-relaxed [overflow-wrap:anywhere]",
             isUser
-              ? "bg-sage text-cream rounded-br-sm"
-              : "bg-white border border-cream-border text-soil rounded-bl-sm shadow-soft",
+              ? "bg-sage text-cream rounded-br-sm whitespace-pre-wrap"
+              : "bg-white border border-cream-border text-soil rounded-bl-sm shadow-soft [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:pl-1 [&_li+li]:mt-1 [&_strong]:font-semibold",
             streaming && "caret"
           )}
         >
-          {text || (streaming ? "" : "")}
+          {isUser ? text : <ReactMarkdown>{text}</ReactMarkdown>}
         </div>
         {!isUser && !streaming && text && (
           <AudioReplayPill text={text} language={language} />
