@@ -26,7 +26,10 @@ logger = logging.getLogger(__name__)
 
 # Module-level client — initialised once on import (serves as @st.cache_resource
 # equivalent; importing this module at Streamlit startup pre-warms the connection).
-_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+_client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options=types.HttpOptions(api_version="v1beta"),
+)
 
 # ---------------------------------------------------------------------------
 # Base system prompt — DO NOT EDIT (per project brief).
