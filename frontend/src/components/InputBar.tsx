@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Send } from "lucide-react";
 import VoiceButton from "./VoiceButton";
 import { transcribe } from "@/lib/api";
@@ -54,7 +55,7 @@ export default function InputBar({
     }
   }
 
-  return (
+  return createPortal(
     <div
       ref={barRef}
       className="fixed inset-x-0 bottom-0 z-20 border-t border-cream-border bg-white pb-[env(safe-area-inset-bottom)]"
@@ -96,6 +97,7 @@ export default function InputBar({
           />
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
