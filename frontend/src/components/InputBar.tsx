@@ -40,7 +40,7 @@ export default function InputBar({
   }
 
   return (
-    <div className="border-t border-cream-border bg-white">
+    <div className="shrink-0 border-t border-cream-border bg-white pb-[env(safe-area-inset-bottom)]">
       {status && (
         <div className="mx-auto max-w-conv px-4 pt-2 text-xs text-sage-dark">{status}</div>
       )}

@@ -127,7 +127,7 @@ export default function Chat() {
   const empty = messages.length === 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
+    <div className="h-screen h-[100dvh] flex flex-col bg-cream">
       <Header
         language={language}
         onOpenLanguages={() => setShowSheet(true)}
@@ -150,7 +150,7 @@ export default function Chat() {
 
       <main
         ref={scrollerRef}
-        className="flex-1 overflow-y-auto scroll-fade"
+        className="min-h-0 flex-1 overflow-y-auto scroll-fade"
       >
         <div className="mx-auto max-w-conv px-4 py-6 pb-8">
           {empty ? (
