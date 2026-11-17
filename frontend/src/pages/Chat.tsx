@@ -42,13 +42,30 @@ export default function Chat() {
   const [pendingAudio, setPendingAudio] = useState<{ text: string } | null>(null);
   const [inputBarHeight, setInputBarHeight] = useState(0);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const latestUserPromptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchWelcome(language).then(setWelcome).catch(() => setWelcome(""));
   }, [language]);
 
   useEffect(() => {
-    scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: "smooth" });
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    if (isStreaming) {
+      scroller.scrollTo({ top: scroller.scrollHeight });
+    } else if (messages.length === 0) {
+      scroller.scrollTo({ top: 0 });
+    } else if (messages[messages.length - 1]?.role === "assistant") {
+      const prompt = latestUserPromptRef.current;
+      if (prompt) {
+        const scrollTop =
+          scroller.scrollTop +
+          prompt.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top;
+        scroller.scrollTo({ top: scrollTop, behavior: "smooth" });
+      }
+    }
   }, [messages, isStreaming]);
 
   // Auto-play TTS for last finished assistant message when voice enabled
@@ -126,9 +143,10 @@ export default function Chat() {
   }
 
   const empty = messages.length === 0;
+  const latestUserIndex = messages.map((message) => message.role).lastIndexOf("user");
 
   return (
-    <div className="h-screen h-[100dvh] flex flex-col bg-cream">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-cream">
       <Header
         language={language}
         onOpenLanguages={() => setShowSheet(true)}
@@ -151,7 +169,7 @@ export default function Chat() {
 
       <main
         ref={scrollerRef}
-        className="min-h-0 flex-1 overflow-y-auto scroll-fade"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-fade"
       >
         <div
           className="mx-auto max-w-conv px-4 py-6 pb-8"
@@ -168,13 +186,17 @@ export default function Chat() {
           ) : (
             <div className="flex flex-col gap-3">
               {messages.map((m, i) => (
-                <ChatBubble
+                <div
                   key={i}
-                  role={m.role}
-                  text={m.content}
-                  streaming={isStreaming && i === messages.length - 1 && m.role === "assistant"}
-                  language={language}
-                />
+                  ref={i === latestUserIndex ? latestUserPromptRef : undefined}
+                >
+                  <ChatBubble
+                    role={m.role}
+                    text={m.content}
+                    streaming={isStreaming && i === messages.length - 1 && m.role === "assistant"}
+                    language={language}
+                  />
+                </div>
               ))}
               {isStreaming && messages[messages.length - 1]?.content === "" && <TypingIndicator />}
             </div>
